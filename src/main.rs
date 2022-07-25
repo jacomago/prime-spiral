@@ -1,3 +1,4 @@
+use std::path::PathBuf;
 use nannou::prelude::*;
 use sorted_vec::SortedSet;
 
@@ -59,8 +60,6 @@ impl Spiral {
 }
 
 struct Model {
-    field_up: f32,
-    field_left: f32,
     primes: SortedSet<u64>,
     spirals: Vec<Spiral>,
     max: u64,
@@ -69,8 +68,24 @@ struct Model {
 
 const SIZE: usize = 1024;
 
-fn key_pressed(app: &App, model: &mut Model, key: Key) {
-    interaction::key_pressed(app, &mut model.field_up, &mut model.field_left, key);
+pub fn frame_path(app: &App) -> PathBuf {
+    save_path(app)
+        .join(format!("{:03}", app.elapsed_frames()))
+        .with_extension("png")
+}
+
+pub fn save_path(app: &App) -> PathBuf {
+    app.assets_path()
+        .expect("Expected project path")
+        .join("images")
+        .join(app.exe_name().unwrap())
+}
+
+fn key_pressed(app: &App, _: &mut Model, key: Key) {
+    match key {
+        Key::S => app.main_window().capture_frame(frame_path(app)),
+        _other_key => {}
+    }
 }
 
 fn model(app: &App) -> Model {
@@ -87,8 +102,6 @@ fn model(app: &App) -> Model {
     let n = 0;
     Model {
         primes: SortedSet::from(vec![2, 3, 5, 7, 11, 13, 17, 19]),
-        field_up: 120.0,
-        field_left: 1.0,
         spirals: (3..12)
             .map(|i| {
                 Spiral::new(
